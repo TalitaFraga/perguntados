@@ -18,22 +18,53 @@ typedef struct perguntados{
 }perguntados;
 
 
+
 void criar_lista_perguntas(perguntados **head);
 int quantidade_perguntas(FILE *file);
-int jogar(perguntados *head, int total_perguntas); 
+int jogar(perguntados *head, int total_perguntas, char *nome_jogador); 
+void gravar_pontuacao(char *nome_jogador, int pontos);
 
 int main(){
-    int quantidade_perguntas;
+    int quantidade_perguntas, num_jogadores;
     perguntados *head = NULL;
+    printf("Digite a quantidade de jogadores (1 ou 2):\n");
+    scanf("%d", &num_jogadores);
     printf("Digite a quantidade de perguntas que deseja jogar:\n");
     scanf("%d", &quantidade_perguntas);
-    int pontos = 0; 
+    
     criar_lista_perguntas(&head);
-    for(int i = 0; i < quantidade_perguntas; i++) { 
-        pontos += jogar(head, quantidade_perguntas); 
+
+    char jogador1[50], jogador2[50];
+    int pontos1 = 0, pontos2 = 0;
+
+    printf("Digite o nome do primeiro jogador:\n");
+    scanf("%s", jogador1);
+
+    if(num_jogadores == 2) {
+        printf("Digite o nome do segundo jogador:\n");
+        scanf("%s", jogador2);
     }
-    printf("Você marcou %d pontos!\n", pontos);
-   
+
+    for(int i = 0; i < quantidade_perguntas; i++) { 
+        printf("\nTurno do %s:\n", jogador1);
+        pontos1 += jogar(head, quantidade_perguntas, jogador1); 
+        if(num_jogadores == 2) {
+            printf("\nTurno do %s:\n", jogador2);
+            pontos2 += jogar(head, quantidade_perguntas, jogador2); 
+        }
+    }
+
+        printf("\n%s %d pontos\n", jogador1, pontos1);
+        if(num_jogadores == 2) {
+            printf(" %s %d pontos\n", jogador2, pontos2);
+        }
+    
+
+    gravar_pontuacao(jogador1, pontos1);
+    if(num_jogadores == 2) {
+        gravar_pontuacao(jogador2, pontos2);
+    }
+
     return 0;
 }
 
@@ -96,7 +127,7 @@ int quantidade_perguntas(FILE *file) {
 }
 
 
-int jogar(perguntados *head, int total_perguntas){ 
+int jogar(perguntados *head, int total_perguntas, char *nome_jogador){ 
     srand(time(0)); 
     int num_pergunta = rand() % total_perguntas + 1; 
 
@@ -116,7 +147,7 @@ int jogar(perguntados *head, int total_perguntas){
             scanf(" %c", &resposta);
 
             if (resposta == atual->resposta[0]) { 
-                printf("Resposta correta!\n");
+                printf("Resposta correta! Você ganhou 1 ponto.\n");
                 return 1; 
             } else {
                 printf("Resposta incorreta. A resposta correta era: %c\n", atual->resposta[0]);
@@ -128,6 +159,16 @@ int jogar(perguntados *head, int total_perguntas){
         i++;
     }
     return 0;
+}
+
+void gravar_pontuacao(char *nome_jogador, int pontos) {
+    FILE *file = fopen("pontuacao.csv", "a");
+    if (file == NULL) {
+        printf("Erro ao abrir o arquivo\n");
+        return;
+    }
+    fprintf(file, "%s, %d pontos\n", nome_jogador, pontos);
+    fclose(file);
 }
    
 
