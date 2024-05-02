@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h> 
 
 #define MAX_LINE_SIZE 1024
 #define MAX_FIELD_SIZE 256
@@ -12,31 +11,27 @@ typedef struct perguntados{
     char alternativa_a[10];
     char alternativa_b[10];
     char alternativa_c[10];
-    char resposta[2];
+    char resposta[10];
     struct perguntados *prox;
     struct perguntados *ant;
 }perguntados;
 
-
 void criar_lista_perguntas(perguntados **head);
 int quantidade_perguntas(FILE *file);
-int jogar(perguntados *head, int total_perguntas); 
+void imprimir(perguntados *head);
 
 int main(){
     int quantidade_perguntas;
     perguntados *head = NULL;
     printf("Digite a quantidade de perguntas que deseja jogar:\n");
     scanf("%d", &quantidade_perguntas);
-    int pontos = 0; 
+
     criar_lista_perguntas(&head);
-    for(int i = 0; i < quantidade_perguntas; i++) { 
-        pontos += jogar(head, quantidade_perguntas); 
-    }
-    printf("Você marcou %d pontos!\n", pontos);
-   
+
+    imprimir(head);
+
     return 0;
 }
-
 
 void criar_lista_perguntas(perguntados **head) {
     FILE *file = fopen("perguntas.csv", "r");
@@ -46,11 +41,11 @@ void criar_lista_perguntas(perguntados **head) {
     }
     char line[MAX_LINE_SIZE];
     while (fgets(line, sizeof(line), file) != NULL) {
-       // printf("Linha lida: %s", line);
+        printf("Linha lida: %s", line);
         char *token = strtok(line, "|");
 
         perguntados *novo = (perguntados*)malloc(sizeof(perguntados));
-        //printf("alocação ok\n");
+        printf("alocação ok\n");
 
         if (novo != NULL) {
             strcpy(novo->pergunta, token);
@@ -74,7 +69,7 @@ void criar_lista_perguntas(perguntados **head) {
                 }
                 aux->prox = novo;
                 novo->ant = aux;
-               // printf("Novo nó adicionado ao final da lista.\n");
+                printf("Novo nó adicionado ao final da lista.\n");
             }
         }
     }
@@ -96,38 +91,20 @@ int quantidade_perguntas(FILE *file) {
 }
 
 
-int jogar(perguntados *head, int total_perguntas){ 
-    srand(time(0)); 
-    int num_pergunta = rand() % total_perguntas + 1; 
-
+void imprimir(perguntados *head){
     int i = 1;
     perguntados *atual = head;
     while(atual != NULL){
-        if (i == num_pergunta) {
-            printf("Pergunta %d:\n", i);
-            printf("Pergunta: %s\n", atual->pergunta);
-            printf("Alternativa A: %s\n", atual->alternativa_a);
-            printf("Alternativa B: %s\n", atual->alternativa_b);
-            printf("Alternativa C: %s\n", atual->alternativa_c);
-            printf("\n");
-
-            char resposta; 
-            printf("Digite sua resposta (A, B ou C):\n");
-            scanf(" %c", &resposta);
-
-            if (resposta == atual->resposta[0]) { 
-                printf("Resposta correta!\n");
-                return 1; 
-            } else {
-                printf("Resposta incorreta. A resposta correta era: %c\n", atual->resposta[0]);
-                return 0; 
-            }
-            break;
-        }
+        printf("Pergunta %d:\n", i);
+        printf("Pergunta: %s\n", atual->pergunta);
+        printf("Alternativa A: %s\n", atual->alternativa_a);
+        printf("Alternativa B: %s\n", atual->alternativa_b);
+        printf("Alternativa C: %s\n", atual->alternativa_c);
+        printf("Resposta: %s\n", atual->resposta);
+        printf("\n");
         atual = atual->prox;
         i++;
     }
-    return 0;
 }
-   
+
 
