@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <gtk/gtk.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -35,81 +35,132 @@ int cont_ranking(jogador **head);
 void ordenar_ranking(jogador **head, int cont);
 void exibir_ranking(jogador **head);
 
-int main() {
+ int main(int argc, char **argv) {
   srand(time(0));
-  int quantidade_perguntas, num_jogadores;
+  GtkWidget *dialog, *spin_button, *content_area, *entry;
+  GtkDialogFlags flags;
+  gint num_jogadores, num_perguntas;
+  gint pontos1=0;
+  gint pontos2=0;
+  gchar *nome_jogador1, *nome_jogador2;
   perguntados *head = NULL;
   jogador *head2 = NULL;
-  printf("Digite a quantidade de jogadores (1 ou 2):\n");
-  scanf("%d", &num_jogadores);
-  printf("Digite a quantidade de perguntas que deseja jogar:\n");
-  scanf("%d", &quantidade_perguntas);
+  gtk_init(&argc, &argv);
 
+  // Pergunta a quantidade de jogadores
+  flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT;
+  dialog = gtk_dialog_new_with_buttons("Quantidade de jogadores", NULL, flags, "OK", GTK_RESPONSE_OK, NULL);
+  gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 200);
+  content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+  spin_button = gtk_spin_button_new_with_range(1, 2, 1);
+  gtk_container_add(GTK_CONTAINER(content_area), spin_button);
+  gtk_widget_show_all(dialog);
+  gtk_dialog_run(GTK_DIALOG(dialog));
+  num_jogadores = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(spin_button));
+  gtk_widget_destroy(dialog);
+
+  // Pergunta o nome do primeiro jogador
+  dialog = gtk_dialog_new_with_buttons("Nome do primeiro jogador", NULL, flags, "OK", GTK_RESPONSE_OK, NULL);
+  gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 200);
+  content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+  entry = gtk_entry_new();
+  gtk_container_add(GTK_CONTAINER(content_area), entry);
+  gtk_widget_show_all(dialog);
+  gtk_dialog_run(GTK_DIALOG(dialog));
+  nome_jogador1 = g_strdup(gtk_entry_get_text(GTK_ENTRY(entry)));
+  gtk_widget_destroy(dialog);
+
+  // Pergunta o nome do segundo jogador, se houver
+  if (num_jogadores == 2) {
+    dialog = gtk_dialog_new_with_buttons("Nome do segundo jogador", NULL, flags, "OK", GTK_RESPONSE_OK, NULL);
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 200);
+    content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+    entry = gtk_entry_new();
+    gtk_container_add(GTK_CONTAINER(content_area), entry);
+    gtk_widget_show_all(dialog);
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    nome_jogador2 = g_strdup(gtk_entry_get_text(GTK_ENTRY(entry)));
+    gtk_widget_destroy(dialog);
+  }
+
+  // Pergunta a quantidade de perguntas
+  dialog = gtk_dialog_new_with_buttons("Quantidade de perguntas", NULL, flags, "OK", GTK_RESPONSE_OK, NULL);
+  gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 200);
+  content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+  spin_button = gtk_spin_button_new_with_range(1, 100, 1); // Substituir 100 pela quantidade máxima de perguntas
+  gtk_container_add(GTK_CONTAINER(content_area), spin_button);
+  gtk_widget_show_all(dialog);
+  gtk_dialog_run(GTK_DIALOG(dialog));
+  num_perguntas = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(spin_button));
+  gtk_widget_destroy(dialog);
   criar_lista_perguntas(&head);
 
-  char jogador1[50], jogador2[50];
-  int pontos1 = 0, pontos2 = 0;
+   for (int i = 0; i < num_perguntas; i++) {
+  GtkWidget *dialog;
+  GtkDialogFlags flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT;
 
-  printf("Digite o nome do primeiro jogador:\n");
-  scanf("%s", jogador1);
+  dialog = gtk_message_dialog_new(NULL, flags, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, "\nTurno do %s:\n", nome_jogador1);
+  gtk_dialog_run(GTK_DIALOG(dialog));
+  gtk_widget_destroy(dialog);
+  pontos1 += jogar(&head, num_perguntas, nome_jogador1);
 
   if (num_jogadores == 2) {
-    printf("Digite o nome do segundo jogador:\n");
-    scanf("%s", jogador2);
-  }
 
-  for (int i = 0; i < quantidade_perguntas; i++) {
-    printf("\nTurno do %s:\n", jogador1);
-    pontos1 += jogar(&head, quantidade_perguntas, jogador1);
+    dialog = gtk_message_dialog_new(NULL, flags, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, "\nTurno do %s:\n", nome_jogador2);
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+    pontos2 += jogar(&head, num_perguntas, nome_jogador2);
+  }
+}
+    gravar_pontuacao(nome_jogador1, pontos1);
     if (num_jogadores == 2) {
-      printf("\nTurno do %s:\n", jogador2);
-      pontos2 += jogar(&head, quantidade_perguntas, jogador2);
+      gravar_pontuacao(nome_jogador2, pontos2);
     }
-  }
+    sleep(1);
+    
 
-  printf("\n%s %d pontos\n", jogador1, pontos1);
+  g_print("Número de jogadores: %d\n", num_jogadores);
+  g_print("Nome do primeiro jogador: %s\n", nome_jogador1);
   if (num_jogadores == 2) {
-    printf(" %s %d pontos\n", jogador2, pontos2);
+    g_print("Nome do segundo jogador: %s\n", nome_jogador2);
   }
+  g_print("Número de perguntas: %d\n", num_perguntas);
 
-  gravar_pontuacao(jogador1, pontos1);
-  if (num_jogadores == 2) {
-    gravar_pontuacao(jogador2, pontos2);
-  }
-
-  criar_ranking(&head2);
-  int cont = cont_ranking(&head2);
-  ordenar_ranking(&head2, cont);
-  exibir_ranking(&head2);
-
+    criar_ranking(&head2);
+    int cont=cont_ranking(&head2);
+    ordenar_ranking(&head2,cont);
+    exibir_ranking(&head2);
+    
   return 0;
 }
-
+    
+    
 void criar_lista_perguntas(perguntados **head) {
   FILE *file = fopen("perguntas.csv", "r");
   if (file == NULL) {
     printf("Erro ao abrir o arquivo\n");
     return;
   }
-  char line[MAX_LINE_SIZE];
-  while (fgets(line, sizeof(line), file) != NULL) {
-    // printf("Linha lida: %s", line);
-    char *token = strtok(line, "|");
+  char pergunta[MAX_FIELD_SIZE];
+  char alternativa_a[MAX_FIELD_SIZE];
+  char alternativa_b[MAX_FIELD_SIZE];
+  char alternativa_c[MAX_FIELD_SIZE];
+  char resposta[MAX_FIELD_SIZE];
 
+  while (fscanf(file, "%[^|]|%[^|]|%[^|]|%[^|]|%s", pergunta, alternativa_a, alternativa_b, alternativa_c, resposta) != EOF) {
     perguntados *novo = (perguntados *)malloc(sizeof(perguntados));
-    // printf("alocação ok\n");
+    printf("alocação ok\n");
 
     if (novo != NULL) {
-      strcpy(novo->pergunta, token);
-      token = strtok(NULL, "|");
-      strcpy(novo->alternativa_a, token);
-      token = strtok(NULL, "|");
-      strcpy(novo->alternativa_b, token);
-      token = strtok(NULL, "|");
-      strcpy(novo->alternativa_c, token);
-      token = strtok(NULL, "|");
-      strcpy(novo->resposta, token);
+    printf("Entrei aqui!\n");
+      strcpy(novo->pergunta, pergunta);
+      strcpy(novo->alternativa_a, alternativa_a);
+      strcpy(novo->alternativa_b, alternativa_b);
+      strcpy(novo->alternativa_c, alternativa_c);
+      strcpy(novo->resposta, resposta);
       novo->prox = NULL;
+
+      printf("Passei por aqui!\n");
 
       if (*head == NULL) {
         novo->ant = NULL;
@@ -121,7 +172,7 @@ void criar_lista_perguntas(perguntados **head) {
         }
         aux->prox = novo;
         novo->ant = aux;
-        // printf("Novo nó adicionado ao final da lista.\n");
+        printf("Novo nó adicionado ao final da lista.\n");
       }
     }
   }
@@ -158,36 +209,72 @@ void remover(perguntados **head, perguntados *aux) {
   free(aux);
 }
 
-int jogar(perguntados **head, int total_perguntas, char *nome_jogador) {
+int jogar(perguntados **head, int num_perguntas, char *nome_jogador) {
   srand(time(0));
-  int num_pergunta = rand() % total_perguntas + 1;
+  int num_pergunta = rand() % num_perguntas + 1;
 
   int i = 1;
   perguntados *atual = *head;
+
   while (atual != NULL) {
     if (i == num_pergunta) {
-      printf("Pergunta %d:\n", i);
-      printf("Pergunta: %s\n", atual->pergunta);
-      printf("Alternativa A: %s\n", atual->alternativa_a);
-      printf("Alternativa B: %s\n", atual->alternativa_b);
-      printf("Alternativa C: %s\n", atual->alternativa_c);
-      printf("\n");
-      atual->selecionado = 1;
+      GtkWidget *dialog, *label, *content_area;
+      GtkDialogFlags flags;
 
+      flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT;
+      dialog = gtk_dialog_new_with_buttons(atual->pergunta, NULL, flags, atual->alternativa_a, 1, atual->alternativa_b, 2, atual->alternativa_c, 3, NULL);
+      content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+      gtk_widget_show_all(dialog);
+
+      int result = gtk_dialog_run(GTK_DIALOG(dialog));
       char resposta;
-      printf("Digite sua resposta (A, B ou C):\n");
-      scanf(" %c", &resposta);
+      switch (result) {
+        case 1:
+          resposta = 'A';
+          break;
+        case 2:
+          resposta = 'B';
+          break;
+        case 3:
+          resposta = 'C';
+          break;
+        default:
+          resposta = ' ';
+          break;
+      }
+
+      gtk_widget_destroy(dialog);
+
+      char *resposta_correta;
+      switch (atual->resposta[0]) {
+        case 'A':
+          resposta_correta = atual->alternativa_a;
+          break;
+        case 'B':
+          resposta_correta = atual->alternativa_b;
+          break;
+        case 'C':
+          resposta_correta = atual->alternativa_c;
+          break;
+        default:
+          resposta_correta = " ";
+          break;
+      }
 
       if (resposta == atual->resposta[0]) {
-        printf("Resposta correta! Você ganhou 1 ponto.\n");
-        remover(head, atual);
+        dialog = gtk_message_dialog_new(NULL, flags, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, "Resposta correta! Você ganhou 1 ponto.");
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+        remover(head,atual);
         return 1;
       } else {
-        printf("Resposta incorreta. A resposta correta era: %c\n",
-               atual->resposta[0]);
-        remover(head, atual);
+        dialog = gtk_message_dialog_new(NULL, flags, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, "Resposta incorreta. A resposta correta era: %s", resposta_correta);
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+        remover(head,atual);
         return 0;
       }
+
       break;
     }
     atual = atual->prox;
@@ -195,6 +282,7 @@ int jogar(perguntados **head, int total_perguntas, char *nome_jogador) {
   }
   return 0;
 }
+
 
 void gravar_pontuacao(char *nome_jogador, int pontos) {
   FILE *file = fopen("pontuacao.csv", "a");
@@ -295,7 +383,7 @@ void ordenar_ranking(jogador **head, int cont) {
 void exibir_ranking(jogador **head) {
   jogador *aux = *head;
   while (aux != NULL) {
-    printf("%s %d\n", aux->nome, aux->pontos);
+    g_print("%s %d\n", aux->nome, aux->pontos);
     aux = aux->prox;
   }
 }
