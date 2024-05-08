@@ -22,19 +22,21 @@ typedef struct jogador {
   char nome[30];
   int pontos;
   struct jogador *prox;
+  struct jogador *ant;
 } jogador;
 
 void criar_lista_perguntas(perguntados **head);
 int quantidade_perguntas(FILE *file);
-int jogar(perguntados *head, int total_perguntas, char *nome_jogador);
+int jogar(perguntados **head, int total_perguntas, char *nome_jogador);
 void gravar_pontuacao(char *nome_jogador, int pontos);
-void remover(perguntados **head);
+void remover(perguntados **head, perguntados *aux);
 void criar_ranking(jogador **head);
 int cont_ranking(jogador **head);
 void ordenar_ranking(jogador **head, int cont);
 void exibir_ranking(jogador **head);
 
 int main() {
+  srand(time(0));
   int quantidade_perguntas, num_jogadores;
   perguntados *head = NULL;
   jogador *head2 = NULL;
@@ -58,10 +60,10 @@ int main() {
 
   for (int i = 0; i < quantidade_perguntas; i++) {
     printf("\nTurno do %s:\n", jogador1);
-    pontos1 += jogar(head, quantidade_perguntas, jogador1);
+    pontos1 += jogar(&head, quantidade_perguntas, jogador1);
     if (num_jogadores == 2) {
       printf("\nTurno do %s:\n", jogador2);
-      pontos2 += jogar(head, quantidade_perguntas, jogador2);
+      pontos2 += jogar(&head, quantidade_perguntas, jogador2);
     }
   }
 
@@ -139,31 +141,29 @@ int quantidade_perguntas(FILE *file) {
   return linhas;
 }
 
-void remover(perguntados **head) {
-  perguntados *aux = *head;
-  if ((*head)->prox == NULL) {
-    if ((*head)->selecionado == 1) {
-      free(*head);
-      *head = NULL;
+void remover(perguntados **head, perguntados *aux) {
+  if (aux == *head) {
+    *head = aux->prox;
+    if (*head) {
+      (*head)->ant = NULL;
     }
-  }else {
-    while (aux->selecionado != 1) {
-      aux = aux->prox;
+  } else {
+    if (aux->ant != NULL) {
+      aux->ant->prox = aux->prox;
     }
-    perguntados *anterior = aux->ant;
-    perguntados *proximo = aux->prox;
-    anterior->prox = proximo;
-    proximo->ant = anterior;
-    free(aux);
+    if (aux->prox != NULL) {
+      aux->prox->ant = aux->ant;
+    }
   }
+  free(aux);
 }
 
-int jogar(perguntados *head, int total_perguntas, char *nome_jogador) {
+int jogar(perguntados **head, int total_perguntas, char *nome_jogador) {
   srand(time(0));
   int num_pergunta = rand() % total_perguntas + 1;
 
   int i = 1;
-  perguntados *atual = head;
+  perguntados *atual = *head;
   while (atual != NULL) {
     if (i == num_pergunta) {
       printf("Pergunta %d:\n", i);
@@ -180,13 +180,14 @@ int jogar(perguntados *head, int total_perguntas, char *nome_jogador) {
 
       if (resposta == atual->resposta[0]) {
         printf("Resposta correta! Você ganhou 1 ponto.\n");
+        remover(head, atual);
         return 1;
       } else {
         printf("Resposta incorreta. A resposta correta era: %c\n",
                atual->resposta[0]);
+        remover(head, atual);
         return 0;
       }
-      remover(&head);
       break;
     }
     atual = atual->prox;
@@ -255,21 +256,41 @@ int cont_ranking(jogador **head) {
 }
 
 void ordenar_ranking(jogador **head, int cont) {
-  for (int n = 1; n <= cont; n++) {
+  int trocado;
+  do {
     jogador *aux = *head;
-    for (int j = 0; j < cont - 1; j++) {
+    jogador *ant_aux = NULL; // Ponteiro para o elemento anterior
+    trocado = 0;
+
+    while (aux->prox != NULL) {
       if (aux->pontos > aux->prox->pontos) {
-        jogador *temp = aux;
-        aux = aux->prox;
-        temp->prox = aux->prox;
-        aux->prox = temp;
-        *head = aux;
+        trocado = 1;
+        jogador *tmp = aux->prox;
+        aux->prox = tmp->prox;
+        tmp->prox = aux;
+
+        if (ant_aux != NULL) {
+          ant_aux->prox = tmp;
+        } else {
+          *head = tmp; // Atualiza o cabeçalho da lista se o primeiro elemento foi trocado
+        }
+
+        // Atualiza os ponteiros anterior se for uma lista duplamente encadeada
+        if (aux->prox != NULL) {
+          aux->prox->ant = aux; // Ajuste do ponteiro anterior do novo próximo de aux
+        }
+        tmp->ant = ant_aux;
+        aux->ant = tmp;
+
+        ant_aux = tmp; // Atualizar o prev_aux para a posição correta
       } else {
+        ant_aux = aux;
         aux = aux->prox;
       }
     }
-  }
+  } while (trocado);
 }
+
 
 void exibir_ranking(jogador **head) {
   jogador *aux = *head;
