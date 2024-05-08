@@ -263,7 +263,7 @@ void ordenar_ranking(jogador **head, int cont) {
     trocado = 0;
 
     while (aux->prox != NULL) {
-      if (aux->pontos > aux->prox->pontos) {
+      if (aux->pontos < aux->prox->pontos) {
         trocado = 1;
         jogador *tmp = aux->prox;
         aux->prox = tmp->prox;
