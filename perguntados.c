@@ -40,11 +40,10 @@ void limparListaRanking(jogador **head);
 
  int main(int argc, char **argv) {
   srand(time(0));
-  GtkWidget *dialog, *spin_button, *content_area, *entry;
+  GtkWidget *dialog, *spin_button, *content_area, *entry, *error_dialog;
   GtkDialogFlags flags;
   int num_jogadores, num_perguntas;
-  int pontos1=0;
-  int pontos2=0;
+  
   char *nome_jogador1, *nome_jogador2;
   perguntados *head = NULL;
   jogador *head2 = NULL;
@@ -53,12 +52,14 @@ void limparListaRanking(jogador **head);
 
 
   while(escolha != 3) {
-
+  
     escolha = introducao(&head2);
     if (escolha == 1) {
+    int pontos1=0;
+    int pontos2=0;
     flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT;
     dialog = gtk_dialog_new_with_buttons("Quantidade de jogadores", NULL, flags, "OK", GTK_RESPONSE_OK, NULL);
-    gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 200);
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 300, 100);
     content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
     spin_button = gtk_spin_button_new_with_range(1, 2, 1);
     gtk_container_add(GTK_CONTAINER(content_area), spin_button);
@@ -68,35 +69,124 @@ void limparListaRanking(jogador **head);
     gtk_widget_destroy(dialog);
     while (gtk_events_pending()) gtk_main_iteration();
 
+dialog = gtk_dialog_new_with_buttons("Nome do primeiro jogador", NULL, flags, "OK", GTK_RESPONSE_OK, NULL);
+gtk_window_set_default_size(GTK_WINDOW(dialog), 300, 100);
+content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+entry = gtk_entry_new();
+gtk_container_add(GTK_CONTAINER(content_area), entry);
+gtk_widget_show_all(dialog);
 
-    dialog = gtk_dialog_new_with_buttons("Nome do primeiro jogador", NULL, flags, "OK", GTK_RESPONSE_OK, NULL);
-    gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 200);
-    content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
-    entry = gtk_entry_new();
-    gtk_container_add(GTK_CONTAINER(content_area), entry);
-    gtk_widget_show_all(dialog);
+FILE *file;
+char line[1024];
+gboolean name_exists;
+
+do {
     gtk_dialog_run(GTK_DIALOG(dialog));
     nome_jogador1 = g_strdup(gtk_entry_get_text(GTK_ENTRY(entry)));
-    gtk_widget_destroy(dialog);
-    while (gtk_events_pending()) gtk_main_iteration();
+    if (nome_jogador1 == NULL || strlen(nome_jogador1) == 0) {
+      error_dialog = gtk_message_dialog_new(GTK_WINDOW(dialog),
+                                            GTK_DIALOG_DESTROY_WITH_PARENT,
+                                            GTK_MESSAGE_ERROR,
+                                            GTK_BUTTONS_CLOSE,
+                                            "Erro ao obter o nome do primeiro jogador, Digite um nome válido");
+      gtk_dialog_run(GTK_DIALOG(error_dialog));
+      gtk_widget_destroy(error_dialog);
+    } else {
+      // Verificar se o nome já existe em pontuação.csv
+      file = fopen("pontuacao.csv", "a+");
+      fseek(file, 0, SEEK_END);
+      if (ftell(file) == 0) {
+        // O arquivo está vazio, então podemos adicionar o nome sem verificar
+        name_exists = FALSE;
+      } else {
+        // O arquivo não está vazio, então precisamos verificar se o nome já existe
+        rewind(file);
+        name_exists = FALSE;
+        while (fgets(line, sizeof(line), file)) {
+          if (strstr(line, nome_jogador1) != NULL) {
+            name_exists = TRUE;
+            break;
+          }
+        }
+      }
+      fclose(file);
+
+      if (name_exists) {
+        error_dialog = gtk_message_dialog_new(GTK_WINDOW(dialog),
+                                              GTK_DIALOG_DESTROY_WITH_PARENT,
+                                              GTK_MESSAGE_ERROR,
+                                              GTK_BUTTONS_CLOSE,
+                                              "O nome do jogador já existe, por favor escolha outro nome");
+        gtk_dialog_run(GTK_DIALOG(error_dialog));
+        gtk_widget_destroy(error_dialog);
+      }
+    }
+} while (nome_jogador1 == NULL || strlen(nome_jogador1) == 0 || name_exists);
+
+gtk_widget_destroy(dialog);
+while (gtk_events_pending()) gtk_main_iteration();
 
 
     if (num_jogadores == 2) {
-      dialog = gtk_dialog_new_with_buttons("Nome do segundo jogador", NULL, flags, "OK", GTK_RESPONSE_OK, NULL);
-      gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 200);
-      content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
-      entry = gtk_entry_new();
-      gtk_container_add(GTK_CONTAINER(content_area), entry);
-      gtk_widget_show_all(dialog);
-      gtk_dialog_run(GTK_DIALOG(dialog));
-      nome_jogador2 = g_strdup(gtk_entry_get_text(GTK_ENTRY(entry)));
-      gtk_widget_destroy(dialog);
-      while (gtk_events_pending()) gtk_main_iteration();
+      
+GtkWidget *error_dialog;
+dialog = gtk_dialog_new_with_buttons("Nome do segundo jogador", NULL, flags, "OK", GTK_RESPONSE_OK, NULL);
+gtk_window_set_default_size(GTK_WINDOW(dialog), 300, 100);
+content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+entry = gtk_entry_new();
+gtk_container_add(GTK_CONTAINER(content_area), entry);
+gtk_widget_show_all(dialog);
+
+do {
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    nome_jogador2 = g_strdup(gtk_entry_get_text(GTK_ENTRY(entry)));
+    if (nome_jogador2 == NULL || strlen(nome_jogador2) == 0) {
+      error_dialog = gtk_message_dialog_new(GTK_WINDOW(dialog),
+                                            GTK_DIALOG_DESTROY_WITH_PARENT,
+                                            GTK_MESSAGE_ERROR,
+                                            GTK_BUTTONS_CLOSE,
+                                            "Erro ao obter o nome do segundo jogador, Digite um nome válido");
+      gtk_dialog_run(GTK_DIALOG(error_dialog));
+      gtk_widget_destroy(error_dialog);
+    } else if (strcmp(nome_jogador1, nome_jogador2) == 0) {
+      error_dialog = gtk_message_dialog_new(GTK_WINDOW(dialog),
+                                            GTK_DIALOG_DESTROY_WITH_PARENT,
+                                            GTK_MESSAGE_ERROR,
+                                            GTK_BUTTONS_CLOSE,
+                                            "O nome do segundo jogador é igual ao do primeiro, por favor escolha outro nome");
+      gtk_dialog_run(GTK_DIALOG(error_dialog));
+      gtk_widget_destroy(error_dialog);
+    } else {
+      file = fopen("pontuacao.csv", "r");
+      name_exists = FALSE;
+      while (fgets(line, sizeof(line), file)) {
+        if (strstr(line, nome_jogador2) != NULL) {
+          name_exists = TRUE;
+          break;
+        }
+      }
+      fclose(file);
+
+      if (name_exists) {
+        error_dialog = gtk_message_dialog_new(GTK_WINDOW(dialog),
+                                              GTK_DIALOG_DESTROY_WITH_PARENT,
+                                              GTK_MESSAGE_ERROR,
+                                              GTK_BUTTONS_CLOSE,
+                                              "O nome do jogador já existe, por favor escolha outro nome");
+        gtk_dialog_run(GTK_DIALOG(error_dialog));
+        gtk_widget_destroy(error_dialog);
+      }
+    }
+} while (nome_jogador2 == NULL || strlen(nome_jogador2) == 0 || name_exists || strcmp(nome_jogador1, nome_jogador2) == 0);
+
+gtk_widget_destroy(dialog);
+while (gtk_events_pending()) gtk_main_iteration();
+
 
     }
 
     dialog = gtk_dialog_new_with_buttons("Quantidade de perguntas", NULL, flags, "OK", GTK_RESPONSE_OK, NULL);
-    gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 200);
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 300, 100);
     content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
     spin_button = gtk_spin_button_new_with_range(1, 100, 1); // Substituir 100 pela quantidade máxima de perguntas
     gtk_container_add(GTK_CONTAINER(content_area), spin_button);
@@ -109,7 +199,7 @@ void limparListaRanking(jogador **head);
 
     for (int i = 0; i < num_perguntas; i++) {
     GtkWidget *dialog;
-    GtkDialogFlags flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT;
+    GtkDialogFlags flags = GTK_DIALOG_MODAL |GTK_DIALOG_DESTROY_WITH_PARENT;
 
     dialog = gtk_message_dialog_new(NULL, flags, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, "\nTurno do %s:\n", nome_jogador1);
     gtk_dialog_run(GTK_DIALOG(dialog));
@@ -135,13 +225,42 @@ void limparListaRanking(jogador **head);
 
     limparListaRanking(&head2); 
     criar_ranking(&head2);
+  
 
-    dialog = gtk_dialog_new_with_buttons("Deseja jogar novamente?", NULL, flags, "Jogar Novamente", 1, "Sair", 2, NULL);
-    gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 200);
-    gtk_widget_show_all(dialog);
-    int result = gtk_dialog_run(GTK_DIALOG(dialog));
-    gtk_widget_destroy(dialog);
-    while (gtk_events_pending()) gtk_main_iteration();
+GtkWidget *image, *box;
+char *message2;
+if (num_jogadores == 2) {
+  if (pontos1 == pontos2) {
+    message2 = g_strdup_printf("Pontuação: %s = %d, %s = %d\nEMPATE\nDeseja jogar novamente?", nome_jogador1, pontos1, nome_jogador2, pontos2);
+  }
+  else{
+    char *winner = pontos1 > pontos2 ? nome_jogador1 : nome_jogador2;
+    message2 = g_strdup_printf("Pontuação: %s = %d, %s = %d\nVENCEDOR: %s\nDeseja jogar novamente?", nome_jogador1, pontos1, nome_jogador2, pontos2, winner);
+  }
+} else {
+  message2 = g_strdup_printf("Pontuação: %s = %d\nDeseja jogar novamente?", nome_jogador1, pontos1);
+}
+
+dialog = gtk_dialog_new_with_buttons("Resultado do Jogo", NULL, flags, "Jogar Novamente", 1, "Sair", 2, NULL);
+gtk_window_set_default_size(GTK_WINDOW(dialog), 300, 100);
+
+box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+gtk_container_add(GTK_CONTAINER(content_area), box);
+
+GtkWidget *label = gtk_label_new(message2);
+gtk_box_pack_start(GTK_BOX(box), label, FALSE, FALSE, 0);
+
+if (num_jogadores == 2 && pontos1 != pontos2) {
+  image = gtk_image_new_from_icon_name("emblem-ok-symbolic", GTK_ICON_SIZE_DIALOG);
+  gtk_box_pack_start(GTK_BOX(box), image, FALSE, FALSE, 0);
+}
+
+gtk_widget_show_all(dialog);
+int result = gtk_dialog_run(GTK_DIALOG(dialog));
+gtk_widget_destroy(dialog);
+while (gtk_events_pending()) gtk_main_iteration();
+
 
     if (result == 1) {
         escolha = 1;
@@ -255,8 +374,8 @@ int jogar(perguntados **head, int num_perguntas, char *nome_jogador) {
       flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT;
       dialog = gtk_dialog_new_with_buttons(atual->pergunta, NULL, flags, atual->alternativa_a, 1, atual->alternativa_b, 2, atual->alternativa_c, 3, NULL);
       content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+      gtk_window_set_default_size(GTK_WINDOW(dialog), 300, 100);
       gtk_widget_show_all(dialog);
-
       int result = gtk_dialog_run(GTK_DIALOG(dialog));
       char resposta;
       switch (result) {
@@ -348,7 +467,6 @@ void criar_ranking(jogador **head) {
       strcpy(novo->nome, token);
       token = strtok(NULL, ",");
       if (token == NULL) {
-    printf("Erro: token é NULL\n");
     return;
 }
       novo->pontos = atoi(token);
@@ -418,45 +536,60 @@ void ordenar_ranking(jogador **head, int cont) {
   } while (trocado);
 }
 
-
 void exibir_ranking(jogador **head) {
   jogador *aux = *head;
-  GtkWidget *dialog, *label, *content_area;
+  GtkWidget *dialog, *text_view, *content_area, *scrolled_window;
+  GtkTextBuffer *buffer;
   GtkDialogFlags flags;
   flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT;
   dialog = gtk_dialog_new_with_buttons("Ranking", NULL, flags, "OK", GTK_RESPONSE_OK, NULL);
+  gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 200);
+
   content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
-  
+  scrolled_window = gtk_scrolled_window_new(NULL, NULL);
+  gtk_container_add(GTK_CONTAINER(content_area), scrolled_window);
+
+  // Ajusta o tamanho mínimo do GtkScrolledWindow
+  gtk_widget_set_size_request(scrolled_window, 400, 200);
+
+  text_view = gtk_text_view_new();
+  gtk_container_add(GTK_CONTAINER(scrolled_window), text_view);
+
+  buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
+
   while (aux != NULL) {
     char ranking_info[50];
     sprintf(ranking_info, "%s %d\n", aux->nome, aux->pontos);
-    label = gtk_label_new(ranking_info);
-    gtk_container_add(GTK_CONTAINER(content_area), label);
+    gtk_text_buffer_insert_at_cursor(buffer, ranking_info, -1);
     aux = aux->prox;
   }
-  
+
   gtk_widget_show_all(dialog);
   gtk_dialog_run(GTK_DIALOG(dialog));
   gtk_widget_destroy(dialog);
   while (gtk_events_pending()) gtk_main_iteration();
-
 }
 
 
 
 int introducao(jogador **head) {
-  GtkWidget *dialog, *content_area;
+  GtkWidget *dialog, *content_area, *label;
   GtkDialogFlags flags;
   flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT;
   dialog = gtk_dialog_new_with_buttons("Bem-vindo ao jogo de perguntas e respostas!", NULL, flags, "Jogar", 1, "Visualizar ranking", 2, "Sair", 3, NULL);
+  gtk_window_set_default_size(GTK_WINDOW(dialog), 300, 100);
+  
+  label = gtk_label_new("Olá! 😊 Pronto para começar o jogo?");
   content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+  gtk_container_add(GTK_CONTAINER(content_area), label);
+  
   gtk_widget_show_all(dialog);
-
   int result = gtk_dialog_run(GTK_DIALOG(dialog));
   gtk_widget_destroy(dialog);
 
   return result;
 }
+
 
 void limparListaRanking(jogador **head) {
     jogador *atual = *head;
