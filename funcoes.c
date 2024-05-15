@@ -1,3 +1,7 @@
+#include "funcoes.h"
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
 void criar_lista_perguntas(perguntados **head) {
   FILE *file = fopen("perguntas.csv", "r");
