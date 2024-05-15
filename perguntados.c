@@ -2,41 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
-#define MAX_LINE_SIZE 1024
-#define MAX_FIELD_SIZE 256
-#define MAX_FIELDS 5
-
-typedef struct perguntados {
-  char pergunta[50];
-  char alternativa_a[10];
-  char alternativa_b[10];
-  char alternativa_c[10];
-  char resposta[2];
-  struct perguntados *prox;
-  struct perguntados *ant;
-  int selecionado;
-} perguntados;
-
-typedef struct jogador {
-  char nome[30];
-  int pontos;
-  struct jogador *prox;
-  struct jogador *ant;
-} jogador;
-
-void criar_lista_perguntas(perguntados **head);
-int quantidade_perguntas(FILE *file);
-int jogar(perguntados **head, int total_perguntas, char *nome_jogador);
-void gravar_pontuacao(char *nome_jogador, int pontos);
-void remover(perguntados **head, perguntados *aux);
-void criar_ranking(jogador **head);
-int cont_ranking(jogador **head);
-void ordenar_ranking(jogador **head, int cont);
-void exibir_ranking(jogador **head);
-int introducao(jogador **head);
-void limparListaRanking(jogador **head);
-
+#include "funcoes.h"
 
  int main(int argc, char **argv) {
   srand(time(0));
