@@ -42,11 +42,10 @@ Passo 2: Compilação e Execução do Jogo
 
 Depois de instalar a biblioteca GTK 3.0, siga os passos abaixo para compilar e executar o jogo:
 
-    Abra o terminal.
-    Navegue até o diretório do jogo:
+Abra o terminal.
+Navegue até o diretório do jogo:
 
-
-cd /caminho/para/o/diretorio/jogo
+    cd /caminho/para/o/diretorio/jogo
 
 Compile o jogo utilizando o comando:
 
