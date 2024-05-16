@@ -9,18 +9,18 @@ Linux
 
 Para instalar a biblioteca GTK 3.0 no Linux, utilize o gerenciador de pacotes da sua distribuição:
 
-sudo apt update
-sudo apt install libgtk-3-dev
+    sudo apt update
+    sudo apt install libgtk-3-dev
 
 
 macOS
 
 Para instalar a biblioteca GTK 3.0 no macOS, você pode utilizar o Homebrew:
 
-    Instale o Homebrew, caso ainda não tenha:
+Instale o Homebrew, caso ainda não tenha:
 
 
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 Instale a biblioteca GTK 3.0:
 
@@ -45,19 +45,16 @@ Depois de instalar a biblioteca GTK 3.0, siga os passos abaixo para compilar e e
     Abra o terminal.
     Navegue até o diretório do jogo:
 
-    bash
 
 cd /caminho/para/o/diretorio/jogo
 
 Compile o jogo utilizando o comando:
 
-bash
 
-gcc `pkg-config --cflags gtk+-3.0` -o perguntados perguntados.c funcoes.c `pkg-config --libs gtk+-3.0`
+    gcc `pkg-config --cflags gtk+-3.0` -o perguntados perguntados.c funcoes.c `pkg-config --libs gtk+-3.0`
 
 Execute o programa:
 
-bash
 
     ./perguntados
 
