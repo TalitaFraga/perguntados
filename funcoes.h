@@ -7,10 +7,10 @@
 #define MAX_FIELD_SIZE 256
 
 typedef struct perguntados {
-  char pergunta[50];
-  char alternativa_a[10];
-  char alternativa_b[10];
-  char alternativa_c[10];
+  char pergunta[200];
+  char alternativa_a[40];
+  char alternativa_b[40];
+  char alternativa_c[40];
   char resposta[2];
   struct perguntados *prox;
   struct perguntados *ant;

@@ -26,7 +26,6 @@ void criar_lista_perguntas(perguntados **head) {
       strcpy(novo->resposta, resposta);
       novo->prox = NULL;
 
-
       if (*head == NULL) {
         novo->ant = NULL;
         *head = novo;
@@ -88,7 +87,7 @@ void remover(perguntados **head, perguntados *aux) {
         flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT;
         dialog = gtk_dialog_new_with_buttons(atual->pergunta, NULL, flags, atual->alternativa_a, 1, atual->alternativa_b, 2, atual->alternativa_c, 3, NULL);
         content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
-        gtk_window_set_default_size(GTK_WINDOW(dialog), 500, 100);
+        gtk_window_set_default_size(GTK_WINDOW(dialog), 700, 100);
         gtk_widget_show_all(dialog);
         int result = gtk_dialog_run(GTK_DIALOG(dialog));
         char resposta;
